@@ -13,8 +13,8 @@ Setup the PHP development environment by [Laravel Homestead](https://laravel.com
 
 ## Setup Client Side(Vue) Configuration
 Following step to startup the client-side of mygallery :
-2. Run 'npm install' to install the package for client-side code
-3. Run 'npm run dev' to build the app on development environment
+1. Run 'npm install' to install the package for client-side code
+2. Run 'npm run dev' to build the app on development environment
 
 ## Features
 * Home Page
