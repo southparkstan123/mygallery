@@ -2,7 +2,7 @@ require('./bootstrap');
 
 import Vue from 'vue';
 import VueResource from 'vue-resource';
-import App from './components/App';
+import App from './App';
 import Auth from './auth/auth.js';
 import Router from './router.js';
 

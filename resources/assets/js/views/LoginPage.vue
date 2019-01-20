@@ -10,19 +10,18 @@
                             <div class="form-group">
                                 <label for="name" class="col-md-4 control-label">Name</label>
                                 <div class="col-md-6">
-                                    <input type="name" class="form-control" id="name" aria-describedby="error-message-name" v-model="name">
+                                    <input type="name" class="form-control" id="name" aria-describedby="error-message-name" v-model="user.name">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="descrption" class="col-md-4 control-label">Password</label>
                                 <div class="col-md-6">
-                                    <input type="password" class="form-control" id="password" aria-describedby="error-message-description" v-model="password">
+                                    <input type="password" class="form-control" id="password" aria-describedby="error-message-description" v-model="user.password">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div class="col-md-6 col-md-offset-4">
                                     <button type="submit" class="btn btn-success">Sign in</button>
-                                    <button class="btn btn-primary" v-on:click="routeToRegisterForm()">Sign up</button>
                                     <!-- <button class="btn btn-link" v-on:click="routeToRegisterForm()">Forgot Password</button> -->
                                 </div>
                             </div>
@@ -34,55 +33,35 @@
     </div>
 </template>
 <script>
-import Message from './Message';
+import Message from '../components/Message';
+import UserServices from '../services/UserServices';
+
 export default {
     components:{
         'message': Message
     },
     data (){
-            let name = "";
-            let password = "";
-            let message = "";
-            let success = false;
-            let status = false;
-            let size = 'small';
-
-            return{
-                name: name,
-                password: password,
-                message: message,
-                success: success,
-                size: size
-            }
-        },
+        return{
+            user: {
+                name: "",
+                password: ""
+            },
+            message: "",
+            success: false,
+            size: 'small',
+            errors: []
+        }
+    },
     methods: {
         routeToRegisterForm(){
             var path = '/signup';
             this.$router.push({ path: path });
         },
         login(){
-            const config = {
-                headers: { 
-                    'Content-Type': 'application/x-www-form-urlencoded' , 
-                }
-            };
-
-            let data = new FormData();
-            data.append('username',this.name);
-            data.append('password',this.password);
-
-            axios.post('/api/v1/user/checkUser',data,config).then(response => {
+            UserServices.login(this.user).then(response => {
                 //Generate token and redirect to dashboard if the credential is valid, otherwise show the error message.
-                if(response.data){
-                    let formData = new FormData();
-                    formData.append('client_id','2');
-                    formData.append('client_secret','OxBasA78CX7OSKaJ1jBOWmq5lz2jSLI0rm7PrjdK');
-                    formData.append('grant_type','password');
-                    formData.append('username',this.name);
-                    formData.append('password',this.password);
-                
-                    axios.post('/oauth/token',formData,config).then(response => { 
-                        
+                if(response.data){                
+                    UserServices.generateToken(this.user).then(response => { 
                         if(!response.errors){
                             this.success = true;
                             this.$auth.setToken(response.data.access_token,response.data.expires_in + Date.now());

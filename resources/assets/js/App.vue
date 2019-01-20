@@ -7,36 +7,30 @@
     </div>
 </template>
 <script>
-import Navbar from './Navbar'
+import Navbar from './components/Navbar'
+import UserServices from './services/UserServices'
+
 export default {
     components: {
         'nav-bar': Navbar,
     },
-    data (){
-        let isAuth = this.$auth.isAuthenticated();
-        let username = null;
-        let email = null;
+    data () {
         return {
-            isAuth: isAuth,
-            username: username,
-            email: email
+            isAuth: this.$auth.isAuthenticated(),
+            username: null,
+            email: null
         }
     },
     methods: {
         getUsernameFromToken(){
-            let access_token = localStorage.getItem('token');
-            if(access_token){
-                let config = {
-                    headers:{
-                        'Authorization' : 'Bearer ' + access_token
-                    }
-                };
-                axios.get('/api/user',config).then(response => {
+            let accessToken = localStorage.getItem('token');
+
+            if(accessToken){
+                UserServices.getUserFromToken(accessToken).then(response => {
                     this.username = response.data.name;
                     this.email = response.data.email;
                     this.isAuth = this.$auth.isAuthenticated();
                 }).catch(e => {
-                    alert(e.response.data.error, 'error');
                     this.$auth.destroyToken();
                     this.$router.push({ name: 'login' });
                 }); 
@@ -47,9 +41,5 @@ export default {
         this.isAuth = this.$auth.isAuthenticated();
         this.getUsernameFromToken();
     },
-    // mounted (){
-    //     this.isAuth = this.$auth.isAuthenticated();
-    //     this.getUsernameFromToken();
-    // },
 }
 </script>

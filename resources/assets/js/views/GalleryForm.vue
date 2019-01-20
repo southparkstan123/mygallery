@@ -2,39 +2,22 @@
     <div>
         <message :success="success" :message="message"></message>
         <!-- GalleryForm Component -->  
-        <form v-on:submit.prevent="saveGallery(id)" enctype="multipart/form-data">
+        <form v-on:submit.prevent="saveGallery(gallery.id)" enctype="multipart/form-data">
             <h1>Edit Gallery</h1>
             <div class="form-group">
                 <label for="name">Name of Gallery</label>
-                <input type="text" class="form-control" id="gallery-name" aria-describedby="error-message-name" v-model="name">
+                <input type="text" class="form-control" id="gallery-name" aria-describedby="error-message-name" v-model="gallery.name">
                 <small id="error-message-name" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.name">{{ message }}</small>
             </div>
             <div class="form-group">
                 <label for="descrption">Description</label>
-                <textarea style="resize:vertical;" class="form-control" id="gallery-description" aria-describedby="error-message-description" v-model="description"></textarea>
+                <textarea style="resize:vertical;" class="form-control" id="gallery-description" aria-describedby="error-message-description" v-model="gallery.description"></textarea>
                 <small id="error-message-description" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.description">{{ message }}</small>
             </div>
-            <!-- <div class="form-group">
-                <div class="fileUpload btn btn-primary">
-                    <span>Select an image</span>
-                    <input type="file" class="upload" :disabled="loading == true" name="thumbnail" accept="image/*" aria-describedby="error-message-file" v-on:change="onThumbnailChange">
-                </div>
-                <small id="error-message-file" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.File">{{ message }}</small>
-            </div> -->
-            <!-- <div class="form-group">
-                <div v-show="previewImage">
-                    <label for="name">Thumbnail Preview</label>
-                    <img :src="previewImage" class="img-responsive">
-                </div>
-                <div v-show="thumbnail">
-                    <label for="name">Original Thumbnail</label>
-                    <img :src="thumbnail" class="img-responsive">
-                </div>
-            </div> -->
             <div class="form-check">
                 <label class="form-check-label">
                     Published?
-                    <input type="checkbox" class="form-check-input" v-model="published">
+                    <input type="checkbox" class="form-check-input" v-model="gallery.published">
                 </label>
             </div>
             <button type="submit" class="btn btn-success" :disabled="loading == true">Submit</button>
@@ -43,7 +26,7 @@
         <hr>
         <!-- Image List -->
         <h1>Image List</h1> 
-        <button class="btn btn-warning" :disabled="loading == true" v-if="images && images.length > 0" v-on:click="publishAllImages()">Publish All Images</button>
+        <button class="btn btn-warning" :disabled="loading == true" v-if="gallery.images && gallery.images.length > 0" v-on:click="publishAllImages()">Publish All Images</button>
 
         <div class="fileUpload btn btn-primary" v-if="!loading">
             <span>Upload images</span>
@@ -52,11 +35,11 @@
         <small v-else>Loading...</small>
         <small id="error-message-file" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.File">{{ message }}</small>
         <div class="row">
-            <div v-bind:key="item.id" v-for="item in images">
+            <div v-bind:key="item.id" v-for="item in gallery.images">
                 <div class="col-sm-4 col-md-3">
                     <div class="thumbnail">                      
                         <a v-bind:href="item.image">
-                            <img :src="'http://res.cloudinary.com/futyau/image/upload/c_fill,h_150,w_150/'+item.public_id" class="img-responsive">  
+                            <div class="item-thumbnail" v-html='thumbnail(item.public_id)'></div>
                         </a>
                         <div class="caption">
                             <form v-on:submit.prevent="updateImage(item)" enctype="multipart/form-data">
@@ -67,7 +50,7 @@
                                 <p>Original height: {{item.height | pixel}}</p>
                                 <div class="form-group">
                                     <label>Description</label>
-                                    <textarea class="form-control" rows="6" style="resize:none;" v-model="item.description" placeholder="Description"></textarea>
+                                    <input class="form-control" type="text" style="resize:none;" v-model="item.description" placeholder="Description"/>
                                 </div>
                                 <div class="form-group">
                                     <label>Gallery</label>
@@ -78,7 +61,7 @@
                                 <div class="form-group">
                                     <label class="form-check-label">
                                         Published?
-                                        <input type="checkbox" class="form-check-input" v-model="item.published">
+                                        <input type="checkbox" class="form-check-input" v-model="item.published"/>
                                     </label>                  
                                 </div>
                                 <div class="form-check">
@@ -95,64 +78,43 @@
     </div>
 </template>
 <script>
-import Message from './Message';
+import Message from '../components/Message';
+import GalleryServices from '../services/GalleryServices';
+import ImageServices from '../services/ImageServices'; 
+import cl from '../cloudinaryConfig';
+
 export default {
     components: {
         'message': Message,
     },
     filters :{
-        megabyte :function (value) {
+        megabyte(value) {
             return (value/1024/1024).toPrecision(3) + 'MB';
         },
-        pixel :function (value) {
+        pixel(value) {
             return value+ 'px';
         }
     },
     data (){
-        //Add and edit gallery 
-        let published = false;
-        let name = '';
-        let description = '';
-        let file = {};
-        let id = this.$route.params.id;
-        // let thumbnail = '';
-        // let previewImage = '';
-        let images = [];
-        let list = [];
-
-        // Errors and messages
-        let errors = [];
-        let success = false;
-        let message = '';
-        let loading = false;
-
         return {
-            //Add and edit gallery 
-            id: id,
-            published: published,
-            // thumbnail: thumbnail,
-            name: name,
-            description: description,
-            // file: file,
-            // previewImage: previewImage,
-            images: images,
-            list: list,
+            gallery: {
+                id: '',
+                name: '',
+                description: '',
+                images: [],
+                published: false
+            },
+
+            list: [],
 
             //Errors and messages
-            errors: errors,
-            success: success,
-            message: message,
-            loading: loading
+            errors: [],
+            success: false,
+            message: '',
+            loading: false
         }
     },
     methods: {
-        //Upload the thumbnail of gallery
-        // onThumbnailChange(e) {
-        //     let files = e.target.files || e.dataTransfer.files;
-        //     if (!files.length)
-        //         return;
-        //     this.createImage(files[0]);
-        // },
         //Upload the images of gallery
         onImagesChange(e) {
             this.loading = true;
@@ -164,29 +126,9 @@ export default {
             }
             this.loading = false;
         },
-        //Show the preview thumbnail on the form
-        // createImage(file) {
-        //     let reader = new FileReader();
-        //     let vm = this;
-        //     reader.onload = (e) => {
-        //         vm.previewImage = e.target.result;
-        //         vm.file = file;
-        //     };
-        //     reader.readAsDataURL(file);
-        // },
         //Create the images on the form
         createImages(file) {
-            let formData = new FormData();
-            formData.append('File',file);
-            formData.append('gallery_id',this.$route.params.id);
-
-            const config = {
-                headers: { 
-                    'Content-Type': 'multipart/form-data' , 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            };
-            axios.post('/api/v1/images/create', formData, config).then(response => { 
+            ImageServices.createImages(file, this.$route.params.id).then(response => { 
                 this.images = response.data.results;
                 this.message = response.data.message;
                 this.success = response.data.success;
@@ -198,16 +140,14 @@ export default {
         //Get the gallery record for detail page
         getGallery(id){
             this.getList();
-            axios.get('/api/v1/gallery/' + id).then(response => {
-                this.published = response.data.published;
-                this.name = response.data.name;
-                this.description = response.data.description;
-                this.message = response.data.message;
-                this.id = id;
-                // this.thumbnail = response.data.thumbnail;
-                this.images = response.data.images;
+            GalleryServices.getGallery(id).then(response => {
+                this.gallery.published = response.data.published;
+                this.gallery.name = response.data.name;
+                this.gallery.description = response.data.description;
+                this.gallery.message = response.data.message;
+                this.gallery.id = id;
+                this.gallery.images = response.data.images;
             }).catch(e => {
-                //console.log(localStorage.getItem('token'));
                 alert(e.response.data.errors.message, 'error');
                 this.$router.push({ name: 'addGallery' });
             }); 
@@ -215,24 +155,12 @@ export default {
         //Save gallery record
         saveGallery(id){
             this.loading = true;
-            
-            let formData = new FormData();
 
-            // formData.append('File',this.file);
-            formData.append('name',this.name);
-            formData.append('published',this.published);
-            formData.append('description',this.description);
-
-            const config = {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            }
-            this.loading = true;
-            axios.post('/api/v1/gallery/update/' + id, formData, config).then(response => {   
+            GalleryServices.updateGallery(this.gallery).then(response => {   
                 this.success = response.data.success;
                 this.message = response.data.message;
                 this.loading = false;
                 if(response.data.success){
-                    console.log(response.data.message);
                     this.items = response.data.results;
                     this.resetForm();
                     this.resetFilter();
@@ -248,7 +176,7 @@ export default {
             let r = confirm("Are you sure to delete this gallery?");
             if (r == true) {
                 this.loading = true;
-                axios.delete('/api/v1/gallery/delete/' + id).then(response => {
+                GalleryServices.deleteGallery(id).then(response => {
                     if(response.data.success){
                         this.items = response.data.results;
                         this.resetFilter();
@@ -266,7 +194,7 @@ export default {
         },
         //Get the list of gallery for dropdown
         getList(){
-            axios.get('/api/v1/list_gallery').then(response => { 
+            GalleryServices.getGalleryDorpdownList().then(response => { 
                 this.list = response.data;
             }).catch(e => {
                 this.errors.push(e);
@@ -275,18 +203,8 @@ export default {
         //Update the image record
         updateImage(imageObj){
             this.loading = true;
-            let formData = new FormData();
 
-            formData.append('published',imageObj.published);
-            formData.append('description',imageObj.description);
-            formData.append('gallery_id',imageObj.gallery_id);
-
-            const config = {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            }
-
-            axios.post('/api/v1/images/update/' + imageObj.id, formData, config)
-            .then(response => { 
+            ImageServices.updateImage(imageObj).then(response => { 
                 this.success = response.data.success;
                 this.message = response.data.message;
                 window.scrollTo(0, 0);
@@ -304,8 +222,7 @@ export default {
             let r = confirm("Are you sure to delete this image?");
             if (r == true) {
                 this.loading = true;
-                axios.delete('/api/v1/images/delete/' + imageID)
-                .then(response => { 
+                ImageServices.deleteImage(imageID).then(response => { 
                     this.success = response.data.success;
                     this.message = response.data.message;
                     window.scrollTo(0, 0);
@@ -321,30 +238,32 @@ export default {
         },
         //Publish all image
         publishAllImages(){
-
-            let formData = new FormData();
-            formData.append('gallery_id',this.$route.params.id);
-
-            const config = {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            }
-
-            axios.post('/api/v1/images/publishAll/', formData, config).then(response => { 
+            const galleryId = this.$route.params.id
+            ImageServices.publishAllImages(galleryId)
+            .then(response => { 
                 this.success = response.data.success;
                 this.message = response.data.message;
                 window.scrollTo(0, 0);
                 this.loading = false;
             })            
             .then(() => {
-                this.getGallery(imageObj.gallery_id);
+                this.getGallery(galleryId);
             }).catch(e => {
                 this.errors.push(e);
             }); 
+        },
+        thumbnail (value){
+            return cl.imageTag(value, { width: 150, height: 150, crop: "fill", responsive_class: "img-responsive"}).toHtml();
         }   
     },
     beforeMount : function() {
         this.getList();
-        this.getGallery(this.id);
+        this.getGallery(this.$route.params.id);
     }
 }
 </script>
+<style scoped>
+    .item-thumbnail{
+        text-align: center
+    }
+</style>

@@ -1,14 +1,14 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import GalleryList from './components/GalleryList';
-import GalleryForm from './components/GalleryForm';
-import AddGallery from './components/AddGallery';
+import GalleryList from './views/GalleryList';
+import GalleryForm from './views/GalleryForm';
+import AddGallery from './views/AddGallery';
 
-import PageNotFound from './components/PageNotFound';
-import Dashboard from './components/Dashboard';
-import LoginPage from './components/LoginPage';
-import RegistrationPage from './components/RegistrationPage';
+import PageNotFound from './views/PageNotFound';
+import Dashboard from './views/Dashboard';
+import LoginPage from './views/LoginPage';
+import RegistrationPage from './views/RegistrationPage';
 
 Vue.use(VueRouter);
 

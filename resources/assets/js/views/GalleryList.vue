@@ -50,50 +50,34 @@
     </div>
 </template>
 <script>
-import Message from './Message';
+import Message from '../components/Message';
+import GalleryServices from '../services/GalleryServices';
+
     export default {
         components:{
             'message': Message
         },
         data () {
-            //Gallery list
-            let items = [];
-            let filteredItems = [];
-
-            // Errors and messages
-            let errors = [];
-            let success = false;
-            let message = '';
-            let loading = false;
-
             return {
                 //Gallery list
-                items: items,
-                filteredItems: filteredItems,
+                items: [],
+                filteredItems: [],
 
                 //Errors and messages
-                errors: errors,
-                success: success,
-                message: message,
-                loading: loading
+                errors: [],
+                success: false,
+                message: '',
+                loading: false
             }
         },
         methods: {
             //Get the list of gallery for listing page
             getGalleries(){
-
-                const config = {
-                    headers: { 
-                        'Content-Type': 'application/json' ,
-                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                    }
-                };
-
-                axios.get('/api/v1/gallery',config).then(response => {
+                GalleryServices.getGalleries().then(response => {
                     this.items = response.data;
                     this.resetFilter();
                 }).catch(e => {
-                    console.log(e);
+                    this.errors.push(e);
                 }); 
             },
             routeToAddGallery(){
@@ -108,7 +92,7 @@ import Message from './Message';
                 let r = confirm("Are you sure to delete this gallery?");
                 if (r == true) {
                     this.loading = true;
-                    axios.delete('/api/v1/gallery/delete/' + id).then(response => {
+                    GalleryServices.deleteGallery(id).then(response => {
                         if(response.data.success){
                             this.items = response.data.results;
                             this.resetFilter();

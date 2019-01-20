@@ -24,14 +24,14 @@
                             <div class="form-group">
                                 <label for="descrption" class="col-md-4 control-label">Retype Password</label>
                                 <div class="col-md-6">
-                                    <input type="password" class="form-control" id="password" aria-describedby="error-message-retype-password" v-model="retypePassword">
+                                    <input type="password" class="form-control" id="retypePassword" aria-describedby="error-message-retype-password" v-model="retypePassword">
                                     <small id="error-message-retype-password" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.retypePassword">{{ message }}</small>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="descrption" class="col-md-4 control-label">Email Address</label>
                                 <div class="col-md-6">
-                                    <input type="email" class="form-control" id="password" aria-describedby="error-message-email" v-model="email">
+                                    <input type="email" class="form-control" id="email" aria-describedby="error-message-email" v-model="email">
                                     <small id="error-message-email" class="form-text text-muted error-message" v-bind:key="message" v-for="message in errors.email">{{ message }}</small>
                                 </div>
                             </div>
@@ -49,47 +49,34 @@
     </div>
 </template>
 <script>
-import Message from './Message';
+import Message from '../components/Message';
+import UserServices from '../services/UserServices';
+
 export default {
     components: {
         'message': Message
     },
     data (){
-        let name = '';
-        let password = '';
-        let retypePassword = '';
-        let email = '';
-        let errors = [];
-        let message  = '';
-        let success  = '';
-
         return{
-            name: name,
-            password: password,
-            retypePassword: retypePassword,
-            email: email,
-            errors: errors,
-            message: message,
-            success: success
+            name: '',
+            password: '',
+            retypePassword: '',
+            email: '',
+            errors: [],
+            message: '',
+            success: ''
         }
     },
     methods: {
-        createUser (){
-            let data = new FormData();
-
-            data.append('name',this.name);
-            data.append('password',this.password);
-            data.append('password_confirmation',this.retypePassword);
-            data.append('email',this.email);
-
-            const config = {
-                headers: { 
-                    'Content-Type': 'application/x-www-form-urlencoded' , 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+        createUser(){
+            const userObj = {
+                name: this.name,
+                password: this.password,
+                retypePassword: this.retypePassword,
+                email: this.email
             };
             
-            axios.post('api/v1/user/signup',data, config).then(response => { 
+            UserServices.createUser(userObj).then(response => { 
                 if(response.data.success){
                     this.message = response.data.message;
                     this.$router.push({ 

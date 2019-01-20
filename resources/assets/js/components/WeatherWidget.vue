@@ -19,7 +19,7 @@
                     </div>
                     <div class="form-group">
                         <div class="col-md-6 col-md-offset-4">
-                            <img :src='icon'>
+                            <img :src='icon | iconLink'>
                             <span>{{ temperature.value }}</span>
                             <span>{{ humidity.value }}{{ humidity.units }}</span>
                         </div>
@@ -30,30 +30,30 @@
     </div>
 </template>
 <script>
+import WeatherServices from '../services/WeatherServices'
+
 export default {
     data (){
-        let icon = '';
-        let humidity = {};
-        let temperature = {};
-        let location = '';
-        let error = '';
         return {
-            icon: icon,
-            humidity: humidity,
-            temperature: temperature,
-            location: location,
-            error: error
+            icon: '',
+            humidity: {},
+            temperature: {},
+            location: '',
+            error: ''
+        }
+    },
+    filters: {
+        iconLink(value) {
+            return value ? 'http://openweathermap.org/img/w/' + value + '.png' : ''
         }
     },
     methods: {
-        getWeatherInformation(location){
-            let formData = new FormData();
-            formData.append('location',this.location);
+        getWeatherInformation(){
             this.error = '';
-            axios.post('api/v1/getWeather/',formData).then(response => { 
+            WeatherServices.getWeatherInformation(this.location).then(response => { 
                 if(response.data.success){
                     this.city = response.data.city;
-                    this.icon = 'http://openweathermap.org/img/w/' + response.data.weather.icon + '.png';
+                    this.icon = response.data.weather.icon;
                     this.humidity = response.data.humidity;
                     this.temperature = response.data.temperature;
                 }else{
@@ -68,40 +68,4 @@ export default {
         }
     }
 }
-    // export default {
-    //     props: ['icon', 'temperature', 'humidity'],
-    //     // filters: {
-    //     //     units: function (temp) {
-    //     //         return temp.value + decodeURIComponent(temp.units);
-    //     //     }
-    //     // }
-    //     // methods: {
-    //     //     getWeatherInformation(){
-    //     //         const OPEN_WEATHER_MAP_URL = 'http://api.openweathermap.org/data/2.5/weather?';
-
-    //     //         var encodedLocation = encodeURIComponent('HongKong');
-    //     //         var apiKey = 'baa7504a87bfb3f4ec041d088ab8e218';
-    //     //         var units = 'metric';
-    //     //         var requestURL = `${OPEN_WEATHER_MAP_URL}q=${encodedLocation}&appid=${apiKey}&units=${units}`;
-
-    //     //         var config ={
-    //     //             headers: {
-    //     //                 'Access-Control-Allow-Origin': '*',
-    //     //                 'Access-Control-Allow-Methods': '*',
-    //     //                 'Access-Control-Allow-Headers': '*'
-    //     //             }
-    //     //         };
-
-    //     //         axios.get(requestURL,config).then(response => { 
-    //     //             console.log(response.data);
-    //     //             this.data = response.data;
-    //     //         }).catch(e => {
-    //     //             this.errors.push(e);
-    //     //         }); 
-    //     //     }
-    //     // },
-    //     // mounted: function(){
-    //     //     this.getWeatherInformation();
-    //     // }
-    // }
 </script>

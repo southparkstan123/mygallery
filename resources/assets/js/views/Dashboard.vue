@@ -9,7 +9,7 @@
     </div>
 </template>
 <script>
-import WeatherWidget from './WeatherWidget';
+import WeatherWidget from '../components/WeatherWidget';
 export default {
     components:{
         'weather-widget': WeatherWidget
