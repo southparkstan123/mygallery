@@ -48,7 +48,7 @@ class GalleryController extends Controller
             // $public_id = $cloudder['public_id'];
 
             $name = $request->name;
-            $published = ($request->published === 'true');// Change string to boolean
+            $published = $request->published;
             $description = $request->description;
 
             $gallery = new Gallery();
@@ -119,7 +119,7 @@ class GalleryController extends Controller
             $gallery = Gallery::find($id);
 
             $gallery->name =  $request->name;
-            $gallery->published = ($request->published === '1');
+            $gallery->published = $request->published;
             $gallery->description = $request->description;
 
             $gallery->save();
